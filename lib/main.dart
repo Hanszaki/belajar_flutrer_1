@@ -49,6 +49,32 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _showDeleteConfirmation(TodoData todo) {
+    late OverlayEntry overlayEntry;
+
+    // Show delete confirmation overlay
+    overlayEntry = OverlayEntry(
+      builder: (context) => DeleteConfirmationOverlay(
+        onConfirm: () {
+          // Handle delete action here
+          setState(() {
+            _todoList.remove(todo);
+          });
+
+          // Remove the overlay
+          overlayEntry.remove();
+        },
+        onCancel: () {
+          // Remove the overlay
+          overlayEntry.remove();
+        },
+      ),
+    );
+
+    // Insert overlay to the overlay entry
+    Overlay.of(context)?.insert(overlayEntry);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,16 +83,13 @@ class _MyHomePageState extends State<MyHomePage> {
         foregroundColor: Colors.white,
         title: Text(widget.title),
       ),
-      body: Column(
+      body: ListView(
         children: _todoList.map((todo) {
           return CardWidget(
             name: todo.name,
             nim: todo.nim,
             onDelete: () {
-              // Handle delete action here
-              setState(() {
-                _todoList.remove(todo);
-              });
+              _showDeleteConfirmation(todo);
             },
           );
         }).toList(),
@@ -218,6 +241,93 @@ class CardWidget extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class DeleteConfirmationOverlay extends StatelessWidget {
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+
+  const DeleteConfirmationOverlay({
+    Key? key,
+    required this.onConfirm,
+    required this.onCancel,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Background overlay
+        GestureDetector(
+          onTap: onCancel,
+          child: Container(
+            color: const Color.fromARGB(183, 0, 0, 0),
+            width: double.infinity,
+            height: double.infinity,
+          ),
+        ),
+        // Delete confirmation card
+        Center(
+          child: Container(
+            width: 250,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Anda yakin menghapus data ini?',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    fontSize: Checkbox.width,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: onConfirm,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        elevation: 0, // Remove shadow
+                      ),
+                      child: const Text('OK',
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 138, 71, 71))),
+                    ),
+                    SizedBox(width: 8),
+                    TextButton(
+                      onPressed: onCancel,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        elevation: 0, // Remove shadow
+                      ),
+                      child: const Text('Cancel',
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 117, 67, 67))),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
